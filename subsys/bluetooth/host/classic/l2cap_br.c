@@ -315,7 +315,14 @@ int bt_l2cap_br_send_cb(struct bt_conn *conn, uint16_t cid, struct net_buf *buf,
 {
 	struct bt_l2cap_hdr *hdr;
 	struct bt_l2cap_chan *ch = bt_l2cap_br_lookup_tx_cid(conn, cid);
-	struct bt_l2cap_br_chan *br_chan = CONTAINER_OF(ch, struct bt_l2cap_br_chan, chan);
+	struct bt_l2cap_br_chan *br_chan;
+
+	if (ch == NULL) {
+		LOG_WRN("CID %d is not found on conn %p", cid, conn);
+		return -ESHUTDOWN;
+	}
+
+	br_chan = CONTAINER_OF(ch, struct bt_l2cap_br_chan, chan);
 
 	if (!ch || !ch->conn) {
 		LOG_WRN("Don't find l2cap ch(%p) or conn(%p).", ch, ch ? ch->conn : 0);
