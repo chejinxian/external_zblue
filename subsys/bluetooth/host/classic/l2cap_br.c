@@ -40,6 +40,8 @@ LOG_MODULE_REGISTER(bt_l2cap_br, CONFIG_BT_L2CAP_LOG_LEVEL);
 
 #define L2CAP_BR_PSM_START	0x0001
 #define L2CAP_BR_PSM_END	0xffff
+#define L2CAP_BR_PSM_DYN_START	0x1000
+#define L2CAP_BR_PSM_DYN_END	L2CAP_BR_PSM_END
 
 #define L2CAP_BR_CID_DYN_START	0x0040
 #define L2CAP_BR_CID_DYN_END	0xffff
@@ -1163,20 +1165,56 @@ static void l2cap_br_conf_rsp(struct bt_l2cap_br *l2cap, uint8_t ident,
 	}
 }
 
+static int bt_l2cap_br_allocate_psm(uint16_t *psm)
+{
+	static uint16_t allocated_psm = L2CAP_BR_PSM_DYN_START;
+
+	if (allocated_psm < L2CAP_BR_PSM_DYN_END) {
+		allocated_psm = allocated_psm + 1;
+	} else {
+		goto failed;
+	}
+
+	for (; allocated_psm <= L2CAP_BR_PSM_DYN_END; allocated_psm++) {
+		/* Bluetooth Core Specification Version 6.0 | Vol 3, Part A, section 4.2
+		 *
+		 * The PSM field is at least two octets in length. All PSM values shall have
+		 * the least significant bit of the most significant octet equal to 0 and the
+		 * least significant bit of all other octets equal to 1.
+		 */
+		if ((allocated_psm & 0x0101) != 0x0001) {
+			continue;
+		}
+
+		if (l2cap_br_server_lookup_psm(allocated_psm)) {
+			LOG_DBG("PSM 0x%04x has been used", allocated_psm);
+			continue;
+		}
+
+		LOG_DBG("Allocated PSM 0x%04x for new server", allocated_psm);
+		*psm = allocated_psm;
+		return 0;
+	}
+
+failed:
+	LOG_WRN("No free dynamic PSMs available");
+	return -EADDRNOTAVAIL;
+}
+
 int bt_l2cap_br_server_register_mc(uint8_t dev_id, struct bt_l2cap_server *server)
 {
+	int err;
 	struct bt_dev *hdev = bt_dev_get(dev_id);
 
 	if (!hdev) {
 		return -ENODEV;
 	}
 
-	if (server->psm < L2CAP_BR_PSM_START || !server->accept) {
+	if (!server->accept) {
 		return -EINVAL;
 	}
 
-	/* PSM must be odd and lsb of upper byte must be 0 */
-	if ((server->psm & 0x0101) != 0x0001) {
+	if (server->psm < L2CAP_BR_PSM_START || !server->accept) {
 		return -EINVAL;
 	}
 
@@ -1187,10 +1225,23 @@ int bt_l2cap_br_server_register_mc(uint8_t dev_id, struct bt_l2cap_server *serve
 		server->sec_level = BT_SECURITY_L1;
 	}
 
-	/* Check if given PSM is already in use */
-	if (l2cap_br_server_lookup_psm(hdev, server->psm)) {
-		LOG_DBG("PSM already registered");
-		return -EADDRINUSE;
+	if (!server->psm) {
+		err = bt_l2cap_br_allocate_psm(&server->psm);
+		if (err) {
+			return err;
+		}
+	} else {
+		/* PSM must be odd and lsb of upper byte must be 0 */
+		if ((server->psm & 0x0101) != 0x0001) {
+			LOG_WRN("PSM must be odd and lsb of upper byte must be 0");
+			return -EINVAL;
+		}
+
+		/* Check if given PSM is already in use */
+		if (l2cap_br_server_lookup_psm(hdev, server->psm)) {
+			LOG_WRN("PSM already registered");
+			return -EADDRINUSE;
+		}
 	}
 
 	LOG_DBG("PSM 0x%04x", server->psm);
