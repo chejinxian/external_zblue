@@ -46,6 +46,12 @@ config BT_CONN_REQ_AUTO_HANDLE
 	  option is disabled, the application will be notified of incoming connection
 	  requests, and the application must accept or reject the connection.
 
+config BT_L2CAP_CONNLESS
+	bool "Bluetooth L2CAP connectionless data reception [EXPERIMENTAL]"
+	select EXPERIMENTAL
+	help
+	  This option enables Bluetooth L2CAP connectionless data reception
+
 config BT_L2CAP_RET
 	bool "Bluetooth L2CAP retransmission mode [EXPERIMENTAL]"
 	select EXPERIMENTAL
