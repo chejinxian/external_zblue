@@ -3730,6 +3730,14 @@ int bt_l2cap_br_server_register_mc(uint8_t dev_id, struct bt_l2cap_server *serve
 		return -ENODEV;
 	}
 
+	CHECKIF(server == NULL) {
+		return -EINVAL;
+	}
+
+	if (sys_slist_find(&br_servers, &server->node, NULL)) {
+		return -EEXIST;
+	}
+
 	if (!server->accept) {
 		return -EINVAL;
 	}
@@ -3766,6 +3774,21 @@ int bt_l2cap_br_server_register_mc(uint8_t dev_id, struct bt_l2cap_server *serve
 	LOG_DBG("PSM 0x%04x", server->psm);
 
 	sys_slist_append(&hdev->l2cap_br_ctx->br_servers, &server->node);
+
+	return 0;
+}
+
+int bt_l2cap_br_server_unregister(struct bt_l2cap_server *server)
+{
+	CHECKIF(server == NULL) {
+		return -EINVAL;
+	}
+
+	if (!sys_slist_find_and_remove(&br_servers, &server->node)) {
+		return -ENOENT;
+	}
+
+	LOG_DBG("PSM 0x%04x unregistered", server->psm);
 
 	return 0;
 }
