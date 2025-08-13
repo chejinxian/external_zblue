@@ -885,22 +885,33 @@ static bool should_stop_tx(struct bt_conn *conn)
 
 void bt_conn_data_ready(struct bt_conn *conn)
 {
+	bool added;
+
 	LOG_DBG("DR");
 
-	/* The TX processor will call the `pull_cb` to get the buf */
-	if (!atomic_set(&conn->_conn_ready_lock, 1)) {
-		/* Attach a reference to the `hdev->le.conn_ready` list.
-		 *
-		 * This reference will be consumed when the conn is popped off
-		 * the list (in `get_conn_ready`).
-		 */
-		bt_conn_ref(conn);
-		sys_slist_append(&conn->hdev->le.conn_ready,
-				 &conn->_conn_ready);
-		LOG_DBG("raised");
+	bt_conn_ref(conn);
+
+	/* This function is the only function which accesses conn_ready list  that can be called
+	 * from a preemptive thread context, therefore requires a critical section to ensure that
+	 * the conn_ready list is not modified while we are checking and appending to it.
+	 */
+	k_sched_lock();
+
+	if (!sys_slist_find(&conn->hdev->le.conn_ready, &conn->_conn_ready, NULL)) {
+		sys_slist_append(&conn->hdev->le.conn_ready, &conn->_conn_ready);
+
+		added = true;
 	} else {
-		LOG_DBG("already in list");
+		added = false;
 	}
+
+	k_sched_unlock();
+
+	if (!added) {
+		bt_conn_unref(conn);
+	}
+
+	LOG_DBG("Connection %p %s conn_ready list", conn, added ? "added to" : "already in");
 
 	/* Kick the TX processor */
 	bt_tx_irq_raise(conn->hdev);
@@ -984,9 +995,8 @@ struct bt_conn *get_conn_ready(struct bt_dev *hdev)
 
 		if (should_stop_tx(conn)) {
 			/* Move reference off the list */
+			__ASSERT_NO_MSG(prev != &conn->_conn_ready);
 			sys_slist_remove(&hdev->le.conn_ready, prev, &conn->_conn_ready);
-			(void)atomic_set(&conn->_conn_ready_lock, 0);
-			bt_conn_unref(conn);
 
 			/* Append connection to list if it is connected and still has data */
 			if (conn->has_data(conn) && (conn->state == BT_CONN_CONNECTED)) {
