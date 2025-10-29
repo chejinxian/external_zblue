@@ -104,6 +104,7 @@ struct bt_dev_l2cap_br_ctx {
 	sys_slist_t br_servers;
 	struct bt_l2cap_br bt_l2cap_br_pool[CONFIG_BT_MAX_CONN];
 	uint8_t ident;
+	uint32_t last_allocated_psm;
 } l2cap_br_ctx_pool[CONFIG_BT_NUM_CTLRS];
 
 struct bt_l2cap_chan *bt_l2cap_br_lookup_rx_cid(struct bt_conn *conn,
@@ -1165,12 +1166,12 @@ static void l2cap_br_conf_rsp(struct bt_l2cap_br *l2cap, uint8_t ident,
 	}
 }
 
-static int bt_l2cap_br_allocate_psm(uint16_t *psm)
+static int bt_l2cap_br_allocate_psm(struct bt_dev *hdev, uint16_t *psm)
 {
 	/* DYN_END is UINT16_MAX, so to be able to do a psm <= DYN_END comparison
 	 * we need to use uint32_t as the type.
 	 */
-	static uint32_t allocated_psm = L2CAP_BR_PSM_DYN_START;
+	uint32_t allocated_psm = hdev->l2cap_br_ctx->last_allocated_psm;
 
 	if (allocated_psm < L2CAP_BR_PSM_DYN_END) {
 		allocated_psm = allocated_psm + 1;
@@ -1189,13 +1190,14 @@ static int bt_l2cap_br_allocate_psm(uint16_t *psm)
 			continue;
 		}
 
-		if (l2cap_br_server_lookup_psm((uint16_t)allocated_psm)) {
+		if (l2cap_br_server_lookup_psm(hdev, (uint16_t)allocated_psm)) {
 			LOG_DBG("PSM 0x%04x has been used", allocated_psm);
 			continue;
 		}
 
 		LOG_DBG("Allocated PSM 0x%04x for new server", allocated_psm);
 		*psm = (uint16_t)allocated_psm;
+		hdev->l2cap_br_ctx->last_allocated_psm = allocated_psm;
 		return 0;
 	}
 
@@ -1229,7 +1231,7 @@ int bt_l2cap_br_server_register_mc(uint8_t dev_id, struct bt_l2cap_server *serve
 	}
 
 	if (!server->psm) {
-		err = bt_l2cap_br_allocate_psm(&server->psm);
+		err = bt_l2cap_br_allocate_psm(hdev, &server->psm);
 		if (err) {
 			return err;
 		}
@@ -2167,6 +2169,7 @@ void bt_l2cap_br_init(struct bt_dev *hdev)
 	hdev->l2cap_br_ctx = &l2cap_br_ctx_pool[hdev->dev_id];
 	hdev->l2cap_br_ctx->hdev = hdev;
 	hdev->l2cap_br_ctx->ident = 0;
+	hdev->l2cap_br_ctx->last_allocated_psm = L2CAP_BR_PSM_DYN_START;
 
 	sys_slist_init(&hdev->l2cap_br_ctx->br_servers);
 
