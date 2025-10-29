@@ -171,7 +171,7 @@ static uint8_t ssp_get_auth(const struct bt_conn *conn)
 	uint8_t mitm = 0;
 
 	/* Check if the MITM is required by service */
-	max_sec_level = bt_l2cap_br_get_max_sec_level();
+	max_sec_level = bt_l2cap_br_get_max_sec_level(conn->hdev);
 	if ((max_sec_level > BT_SECURITY_L2) && (ssp_pair_method(conn) > JUST_WORKS)) {
 		mitm = BT_MITM;
 	}

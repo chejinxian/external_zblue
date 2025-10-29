@@ -1221,12 +1221,12 @@ failed:
 	return -EADDRNOTAVAIL;
 }
 
-bt_security_t bt_l2cap_br_get_max_sec_level(void)
+bt_security_t bt_l2cap_br_get_max_sec_level(struct bt_dev *hdev)
 {
 	struct bt_l2cap_server *server;
 	bt_security_t sec_level = BT_SECURITY_L0;
 
-	SYS_SLIST_FOR_EACH_CONTAINER(&br_servers, server, node) {
+	SYS_SLIST_FOR_EACH_CONTAINER(&hdev->l2cap_br_ctx->br_servers, server, node) {
 		if (sec_level < server->sec_level) {
 			sec_level = server->sec_level;
 		}
