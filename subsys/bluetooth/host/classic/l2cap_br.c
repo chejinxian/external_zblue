@@ -3734,7 +3734,7 @@ int bt_l2cap_br_server_register_mc(uint8_t dev_id, struct bt_l2cap_server *serve
 		return -EINVAL;
 	}
 
-	if (sys_slist_find(&br_servers, &server->node, NULL)) {
+	if (sys_slist_find(&hdev->l2cap_br_ctx->br_servers, &server->node, NULL)) {
 		return -EEXIST;
 	}
 
@@ -3778,13 +3778,19 @@ int bt_l2cap_br_server_register_mc(uint8_t dev_id, struct bt_l2cap_server *serve
 	return 0;
 }
 
-int bt_l2cap_br_server_unregister(struct bt_l2cap_server *server)
+int bt_l2cap_br_server_unregister_mc(uint8_t dev_id, struct bt_l2cap_server *server)
 {
+	struct bt_dev *hdev = bt_dev_get(dev_id);
+
+	if (!hdev) {
+		return -ENODEV;
+	}
+
 	CHECKIF(server == NULL) {
 		return -EINVAL;
 	}
 
-	if (!sys_slist_find_and_remove(&br_servers, &server->node)) {
+	if (!sys_slist_find_and_remove(&hdev->l2cap_br_ctx->br_servers, &server->node)) {
 		return -ENOENT;
 	}
 
