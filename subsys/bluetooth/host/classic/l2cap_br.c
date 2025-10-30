@@ -4778,28 +4778,6 @@ static void l2cap_br_conn_rsp(struct bt_l2cap_br *l2cap, uint8_t ident, struct n
 	}
 }
 
-static void l2cap_br_echo_req(struct bt_l2cap_br *l2cap, uint8_t ident,
-			      uint16_t len, struct net_buf *buf)
-{
-	struct bt_conn *conn = l2cap->chan.chan.conn;
-	struct bt_l2cap_sig_hdr *hdr;
-	struct net_buf *rsp_buf;
-	uint8_t *echo;
-
-	rsp_buf = bt_l2cap_create_pdu(&br_sig_pool, 0);
-
-	hdr = net_buf_add(rsp_buf, sizeof(*hdr));
-	hdr->code = BT_L2CAP_ECHO_RSP;
-	hdr->ident = ident;
-	hdr->len = len;
-
-	if (len) {
-		net_buf_add_mem(rsp_buf, buf->data, len);
-	}
-
-	l2cap_send(conn, BT_L2CAP_CID_BR_SIG, rsp_buf);
-}
-
 int bt_l2cap_br_chan_send_cb(struct bt_l2cap_chan *chan, struct net_buf *buf, bt_conn_tx_cb_t cb,
 			     void *user_data)
 {
@@ -6179,7 +6157,7 @@ int bt_l2cap_br_echo_req(struct bt_conn *conn, struct net_buf *buf)
 	hdr = net_buf_push(buf, sizeof(*hdr));
 
 	hdr->code = BT_L2CAP_ECHO_REQ;
-	hdr->ident = l2cap_br_get_ident();
+	hdr->ident = l2cap_br_get_ident(conn->hdev);
 	hdr->len = sys_cpu_to_le16(buf->len - sizeof(*hdr));
 
 	/* Set the ident for the signaling request */
