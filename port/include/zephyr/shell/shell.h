@@ -225,7 +225,7 @@ struct shell_static_entry {
  */
 #define SHELL_CMD_ARG_REGISTER(syntax, subcmd, help, handler,		   \
 			       mandatory, optional)			   \
-	static const struct shell_static_entry UTIL_CAT(_shell_, syntax) = \
+	const struct shell_static_entry UTIL_CAT(_shell_, syntax) = \
 	SHELL_CMD_ARG(syntax, subcmd, help, handler, mandatory, optional); \
 	const TYPE_SECTION_ITERABLE(union shell_cmd_entry,	   \
 		UTIL_CAT(shell_cmd_, syntax), shell_root_cmds,		   \

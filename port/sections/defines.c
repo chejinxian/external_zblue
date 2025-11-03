@@ -244,7 +244,7 @@ struct net_buf_pool *_net_buf_pool_list[] = {
 #endif /* CONFIG_BT_MESH_FRIEND */
 #endif /* CONFIG_BT_MESH */
 
-#if defined(CONFIG_BT_SHELL)
+#if defined(CONFIG_BT_MC_SHELL)
 #if defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
 	&data_rx_pool,
 	&data_tx_pool,
@@ -255,23 +255,23 @@ struct net_buf_pool *_net_buf_pool_list[] = {
 #if defined(CONFIG_BT_A2DP)
 	// &a2dp_tx_pool,
 #endif /* CONFIG_BT_A2DP */
-#if defined(CONFIG_BT_RFCOMM)
-	&pool,
-#endif /* CONFIG_BT_RFCOMM */
+// #if defined(CONFIG_BT_RFCOMM)
+// 	&pool,
+// #endif /* CONFIG_BT_RFCOMM */
 #endif /* CONFIG_BT_CLASSIC */
-#if defined(CONFIG_BT_ISO)
-	&bis_tx_pool,
-	&tx_pool,
-#endif /* CONFIG_BT_ISO */
-#if defined(CONFIG_BT_BAP_STREAM)
-	&sine_tx_pool,
-#endif /* CONFIG_BT_BAP_STREAM */
-#if defined(CONFIG_BT_AUDIO_TX)
-	&tx_pool,
-#endif /* CONFIG_BT_AUDIO_TX */
-#if defined(CONFIG_USB_DEVICE_AUDIO)
-	&usb_out_buf_pool,
-#endif /* CONFIG_USB_DEVICE_AUDIO */
+// #if defined(CONFIG_BT_ISO)
+// 	&bis_tx_pool,
+// 	&tx_pool,
+// #endif /* CONFIG_BT_ISO */
+// #if defined(CONFIG_BT_BAP_STREAM)
+// 	&sine_tx_pool,
+// #endif /* CONFIG_BT_BAP_STREAM */
+// #if defined(CONFIG_BT_AUDIO_TX)
+// 	&tx_pool,
+// #endif /* CONFIG_BT_AUDIO_TX */
+// #if defined(CONFIG_USB_DEVICE_AUDIO)
+// 	&usb_out_buf_pool,
+// #endif /* CONFIG_USB_DEVICE_AUDIO */
 #endif /* CONFIG_BT_SHELL */
 	NULL,
 };
@@ -321,7 +321,7 @@ const union shell_cmd_entry *_shell_root_cmds_list[] = {
 #if defined(CONFIG_BT_CLASSIC)
     &shell_cmd_br,
 #if defined(CONFIG_BT_RFCOMM)
-    &shell_cmd_rfcomm,
+    // &shell_cmd_rfcomm,
 #endif /* CONFIG_BT_RFCOMM */
 #if defined(CONFIG_BT_A2DP)
     // &shell_cmd_a2dp,
@@ -331,7 +331,7 @@ const union shell_cmd_entry *_shell_root_cmds_list[] = {
 #endif /* CONFIG_BT_AVRCP */
 #endif /* CONFIG_BT_CLASSIC */
 #if defined(CONFIG_BT_CONN)
-    &shell_cmd_gatt,
+    // &shell_cmd_gatt,
 #if defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
     &shell_cmd_l2cap,
 #endif /* CONFIG_BT_L2CAP_DYNAMIC_CHANNEL */

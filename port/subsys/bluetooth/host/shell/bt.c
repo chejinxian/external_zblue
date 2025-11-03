@@ -2302,7 +2302,7 @@ static int cmd_adv_create(const struct shell *sh, size_t argc, char *argv[])
 
 	dev_id = strtoul(argv[1], NULL, 10);
 
-	if (!adv_param_parse(argc-1, argv+1, &param)) {
+	if (!adv_param_parse(argc-1, argv, &param)) {
 		shell_help(sh);
 		return -ENOEXEC;
 	}
