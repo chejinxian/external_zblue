@@ -22,17 +22,17 @@
 #include <zephyr/settings/settings.h>
 
 /* bt_l2cap_fixed_chan START */
-extern struct bt_l2cap_fixed_chan z_att_fixed_chan;
-extern struct bt_l2cap_fixed_chan le_fixed_chan;
-extern struct bt_l2cap_fixed_chan smp_fixed_chan;
+extern struct bt_l2cap_fixed_chan bt_l2cap_fixed_chanz_att_fixed_chan;
+extern struct bt_l2cap_fixed_chan bt_l2cap_fixed_chanle_fixed_chan;
+extern struct bt_l2cap_fixed_chan bt_l2cap_fixed_chansmp_fixed_chan;
 
 struct bt_l2cap_fixed_chan *_bt_l2cap_fixed_chan_list[] = {
 #if defined(CONFIG_BT_CONN)
-	&z_att_fixed_chan,
-	&le_fixed_chan,
+	&bt_l2cap_fixed_chanz_att_fixed_chan,
+	&bt_l2cap_fixed_chanle_fixed_chan,
 #endif /* CONFIG_BT_CONN */
 #if defined(CONFIG_BT_SMP)
-	&smp_fixed_chan,
+	&bt_l2cap_fixed_chansmp_fixed_chan,
 #endif /* CONFIG_BT_SMP */
 	NULL,
 };

@@ -388,7 +388,7 @@ struct bt_l2cap_fixed_chan {
  *  will be initialized in the same order.
  */
 #define BT_L2CAP_FIXED_CHANNEL_DEFINE(_name)                                                       \
-	static const STRUCT_SECTION_ITERABLE(bt_l2cap_fixed_chan,                                  \
+	const STRUCT_SECTION_ITERABLE(bt_l2cap_fixed_chan,                                             \
 					     _CONCAT(bt_l2cap_fixed_chan, _name))
 
 /** L2CAP Endpoint Link Mode. Basic mode. */
