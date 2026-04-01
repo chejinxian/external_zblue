@@ -2354,6 +2354,43 @@ int bt_sdp_discover(struct bt_conn *conn,
 	return 0;
 }
 
+int bt_sdp_discover_cancel(struct bt_conn *conn,
+			   const struct bt_sdp_discover_params *params)
+{
+	int i;
+	struct bt_dev *hdev;
+	struct bt_sdp_client *session = NULL;
+
+	if (!conn || !params) {
+		return -EINVAL;
+	}
+
+	hdev = conn->hdev;
+
+	for (i = 0; i < ARRAY_SIZE(hdev->sdp_ctx->bt_sdp_client_pool); i++) {
+		if (hdev->sdp_ctx->bt_sdp_client_pool[i].chan.chan.conn == conn) {
+			session = &hdev->sdp_ctx->bt_sdp_client_pool[i];
+			break;
+		}
+	}
+
+	if (!session) {
+		return -ENOTCONN;
+	}
+
+	sys_slist_find_and_remove(&session->reqs, (sys_snode_t *)&params->_node);
+
+	if (session->param == params) {
+		session->param = NULL;
+	}
+
+	if (sys_slist_is_empty(&session->reqs) && !session->param) {
+		bt_l2cap_chan_disconnect(&session->chan.chan);
+	}
+
+	return 0;
+}
+
 /* Helper getting length of data determined by DTD for integers */
 static inline ssize_t sdp_get_int_len(const uint8_t *data, size_t len)
 {
