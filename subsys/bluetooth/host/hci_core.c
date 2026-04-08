@@ -66,6 +66,8 @@
 #include "direction_internal.h"
 #endif /* CONFIG_BT_DF */
 
+#include "probe/bt_probe_hci.h"
+
 #define LOG_LEVEL CONFIG_BT_HCI_CORE_LOG_LEVEL
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(bt_hci_core);
@@ -661,6 +663,8 @@ static void hci_num_completed_packets(struct bt_dev *hdev, struct net_buf *buf)
 			continue;
 		}
 
+		bt_probe_hci_nocp(handle, count,
+			(uint16_t)k_sem_count_get(bt_conn_get_pkts(conn)));
 		while (count--) {
 			sys_snode_t *node;
 
@@ -707,6 +711,7 @@ static void hci_acl(struct bt_dev *hdev, struct net_buf *buf)
 		return;
 	}
 
+	bt_probe_hci_stack_rx_acl(buf->data, buf->len);
 	hdr = net_buf_pull_mem(buf, sizeof(*hdr));
 	len = sys_le16_to_cpu(hdr->len);
 	handle = sys_le16_to_cpu(hdr->handle);
